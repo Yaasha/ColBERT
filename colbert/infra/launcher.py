@@ -7,7 +7,7 @@ import torch.multiprocessing as mp
 import numpy as np
 
 try:
-    mp.set_start_method('spawn', force=True)
+    mp.set_start_method('fork', force=True)
 except RuntimeError:
     pass
 

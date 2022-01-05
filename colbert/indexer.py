@@ -72,9 +72,12 @@ class Indexer:
         return self.index_path
 
     def __launch(self, collection):
-        manager = mp.Manager()
-        shared_lists = [manager.list() for _ in range(self.config.nranks)]
-        shared_queues = [manager.Queue(maxsize=1) for _ in range(self.config.nranks)]
+        if self.config.nranks == 1:
+            encode(self.config, collection, None, None)
+        else:
+            manager = mp.Manager()
+            shared_lists = [manager.list() for _ in range(self.config.nranks)]
+            shared_queues = [manager.Queue(maxsize=1) for _ in range(self.config.nranks)]
 
-        launcher = Launcher(encode)
-        launcher.launch(self.config, collection, shared_lists, shared_queues)
+            launcher = Launcher(encode)
+            launcher.launch(self.config, collection, shared_lists, shared_queues)

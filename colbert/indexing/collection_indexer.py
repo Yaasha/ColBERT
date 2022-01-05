@@ -104,14 +104,16 @@ class CollectionIndexer():
         local_sample_embs, doclens = self.encoder.encode_passages(local_sample)
 
         self.num_sample_embs = torch.tensor([local_sample_embs.size(0)]).cuda()
-        torch.distributed.all_reduce(self.num_sample_embs)
 
         avg_doclen_est = sum(doclens) / len(doclens) if doclens else 0
         avg_doclen_est = torch.tensor([avg_doclen_est]).cuda()
-        torch.distributed.all_reduce(avg_doclen_est)
 
         nonzero_ranks = torch.tensor([float(len(local_sample) > 0)]).cuda()
-        torch.distributed.all_reduce(nonzero_ranks)
+
+        if self.nranks > 1:
+            torch.distributed.all_reduce(self.num_sample_embs)
+            torch.distributed.all_reduce(avg_doclen_est)
+            torch.distributed.all_reduce(nonzero_ranks)
 
         avg_doclen_est = avg_doclen_est.item() / nonzero_ranks.item()
         self.avg_doclen_est = avg_doclen_est
